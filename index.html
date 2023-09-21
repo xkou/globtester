@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <meta name="theme-color" content="#353535">
+        <meta name="description" content="Globster is an online tool for testing and visualizing results of glob patterns matching.">
+        <meta name="keywords" content="glob,global expressions,regular expressions,pattern matching,minimatch">
+        <meta name="author" content="Dominik Cygalski">
+        <meta name="application-name" content="globster">
+        <meta property="og:title" content="Glob tester - tool for testing glob patterns">
+        <meta property="og:type" content="website">
+        <meta property="og:image" content="https://globster.xyz/globsterfb.png">
+        <meta property="og:image:width" content="2400">
+        <meta property="og:image:height" content="1260">
+        <meta property="og:url" content="https://globster.xyz">
+        <meta property="og:description" content="Globster is an online tool for testing and visualizing results of glob patterns matching.">
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:title" content="Glob tester - tool for testing glob patterns">
+        <meta name="twitter:description" content="Globster is an online tool for testing and visualizing results of glob patterns matching.">
+        <meta name="twitter:image" content="https://globster.xyz/globstertw.png">
+        <link rel="canonical" href="https://globster.xyz">
+        <title>Glob tester - tool for testing glob patterns</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box
+            }
+
+            body,main {
+                margin: 0;
+                background-color: #2c2c2c;
+                height: 100vh;
+                color: #eee;
+                font-family: "Helvetica Neue",Arial,sans-serif;
+                font-weight: 200
+            }
+
+            ::selection {
+                background: #77d1f5
+            }
+
+            ::-moz-selection {
+                background: #77d1f5
+            }
+
+            ::-webkit-scrollbar {
+                display: none
+            }
+
+            h2 {
+                font-size: 1em;
+                font-weight: 200;
+                letter-spacing: 1px
+            }
+
+            h3 {
+                font-weight: 400
+            }
+
+            h3:not(:first-child) {
+                margin: 3em 0 0 0
+            }
+
+            main>section {
+                padding: 2em 4em;
+                height: calc(100% - 1.75rem);
+                overflow: hidden;
+                background-color: #2c2c2c
+            }
+
+            a {
+                color: #77d1f5;
+                text-decoration: none
+            }
+
+            .left {
+                float: left;
+                overflow: auto;
+                min-width: 25%
+            }
+
+            .right {
+                display: flex;
+                flex-direction: column
+            }
+
+            .left ul {
+                margin: 0 0 0 20px;
+                list-style: none;
+                line-height: 2em
+            }
+
+            .left ul li {
+                font-size: 16px;
+                position: relative
+            }
+
+            .left ul li:before {
+                position: absolute;
+                left: -15px;
+                top: 0;
+                content: '';
+                display: block;
+                border-left: 1px solid #666;
+                height: 1em;
+                border-bottom: 1px solid #666;
+                width: 10px
+            }
+
+            .left ul li:after {
+                position: absolute;
+                left: -15px;
+                bottom: -7px;
+                content: '';
+                display: block;
+                border-left: 1px solid #666;
+                height: 100%
+            }
+
+            .left ul li span {
+                color: #eee;
+                transition: color 350ms ease;
+                font-family: monospace
+            }
+
+            .left ul li span.active {
+                color: #77d1f5
+            }
+
+            .left ul.root>li {
+                margin: 0 0 0 -20px
+            }
+
+            .left ul.root>li:before {
+                display: none
+            }
+
+            .left ul.root>li:after {
+                display: none
+            }
+
+            .left ul li:last-child:after {
+                display: none
+            }
+
+            .input {
+                position: relative;
+                display: flex;
+                justify-content: center;
+                height: 30%;
+                caret-color: #77d1f5
+            }
+
+            #glob {
+                width: 100%;
+                padding: 0;
+                display: inline-block;
+                border: none;
+                background-color: transparent;
+                color: #eee;
+                font-size: 2em;
+                letter-spacing: .2em;
+                text-align: center;
+                font-family: monospace
+            }
+
+            #glob:focus {
+                outline-width: 0
+            }
+
+            #stage {
+                height: 70%;
+                color: #bbb;
+                overflow-y: auto;
+                font-size: .9em
+            }
+
+            #stage ul {
+                list-style: none;
+                margin-top: 3em
+            }
+
+            #stage li {
+                padding: .1em 0
+            }
+
+            #stage>article {
+                display: none;
+                line-height: 1.8em
+            }
+
+            #stage p {
+                margin: 1em 0;
+                font-size: .9em;
+                text-align: justify
+            }
+
+            #stage.about .about,#stage.disqus .disqus,#stage.edit .edit,#stage.examples .examples,#stage.privacy .privacy,#stage.share .share {
+                display: block;
+                height: 100%
+            }
+
+            .code {
+                border-radius: 5px;
+                border: 1px solid #a4a4a4;
+                padding: .3em .7em;
+                margin: .5em;
+                letter-spacing: .1em;
+                background-color: #2c2c2c;
+                font-size: .85rem;
+                cursor: default;
+                font-family: monospace;
+                white-space: nowrap
+            }
+
+            .code.btn {
+                cursor: pointer;
+                opacity: 1;
+                transition: opacity .2s ease;
+                min-width: 15em;
+                display: inline-block;
+                text-align: center;
+                margin-right: 1em
+            }
+
+            .code.btn:hover {
+                opacity: .8
+            }
+
+            .blue {
+                color: #77d1f5
+            }
+
+            textarea {
+                background: 0 0;
+                border: none;
+                width: 100%;
+                height: calc(100% - 10em);
+                min-height: 6em;
+                color: #bbb;
+                font-family: monospace;
+                line-height: 2em;
+                outline: 0;
+                box-shadow: none!important;
+                margin: 2em 0;
+                font-size: 1rem;
+                resize: none;
+                white-space: pre
+            }
+
+            .button {
+                background: #666;
+                padding: .5em 1em;
+                border-radius: 4px;
+                opacity: 1;
+                transition: opacity .2s ease
+            }
+
+            .button:hover {
+                opacity: .8;
+                cursor: pointer
+            }
+
+            .button:active {
+                opacity: .4
+            }
+
+            .edit {
+                text-align: center
+            }
+
+            .kofi {
+                font-weight: 400;
+                font-size: 1.21em;
+                text-decoration: underline
+            }
+
+            nav {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                padding: .5rem 1rem;
+                display: flex;
+                flex-direction: row-reverse;
+                width: 100vw;
+                font-size: .75rem;
+                background-color: #666;
+                justify-content: space-between
+            }
+
+            nav div {
+                display: flex;
+                flex-direction: row-reverse
+            }
+
+            nav a {
+                color: #eee;
+                text-decoration: none;
+                margin-left: 1.5rem;
+                opacity: 1;
+                transition: opacity .2s ease
+            }
+
+            nav a:hover {
+                opacity: .8
+            }
+
+            nav.examples a.examples {
+                color: #6bbd45
+            }
+
+            nav.disqus a.disqus {
+                color: #6bbd45
+            }
+
+            nav.privacy a.privacy {
+                color: #6bbd45
+            }
+
+            nav.about a.about {
+                color: #6bbd45
+            }
+
+            nav.edit a.edit {
+                color: #6bbd45
+            }
+
+            nav.share a.share {
+                color: #6bbd45
+            }
+
+            .hints {
+                margin: 1em 0;
+                text-align: center
+            }
+
+            .hints .infoBtn {
+                transition: all .2s ease
+            }
+
+            .hints.sc .sc {
+                color: #77d1f5;
+                border-color: #77d1f5
+            }
+
+            .hints.star .star {
+                color: #77d1f5;
+                border-color: #77d1f5
+            }
+
+            .hints.slash .slash {
+                color: #77d1f5;
+                border-color: #77d1f5
+            }
+
+            .hints.globstar .globstar {
+                color: #77d1f5;
+                border-color: #77d1f5
+            }
+
+            .hints.brace .brace {
+                color: #77d1f5;
+                border-color: #77d1f5
+            }
+
+            .hints.extquestion .extquestion {
+                color: #77d1f5;
+                border-color: #77d1f5
+            }
+
+            .hints.extstar .extstar {
+                color: #77d1f5;
+                border-color: #77d1f5
+            }
+
+            .hints.extplus .extplus {
+                color: #77d1f5;
+                border-color: #77d1f5
+            }
+
+            .hints.extat .extat {
+                color: #77d1f5;
+                border-color: #77d1f5
+            }
+
+            .hints.extnegate .extnegate {
+                color: #77d1f5;
+                border-color: #77d1f5
+            }
+
+            #extraInfo {
+                display: block;
+                min-height: 5em
+            }
+
+            #extraInfo>span {
+                display: none
+            }
+
+            #extraInfo.sc .sc {
+                display: block
+            }
+
+            #extraInfo.star .star {
+                display: block
+            }
+
+            #extraInfo.slash .slash {
+                display: block
+            }
+
+            #extraInfo.globstar .globstar {
+                display: block
+            }
+
+            #extraInfo.brace .brace {
+                display: block
+            }
+
+            #extraInfo.extquestion .extquestion {
+                display: block
+            }
+
+            #extraInfo.extstar .extstar {
+                display: block
+            }
+
+            #extraInfo.extplus .extplus {
+                display: block
+            }
+
+            #extraInfo.extat .extat {
+                display: block
+            }
+
+            #extraInfo.extnegate .extnegate {
+                display: block
+            }
+
+            .privacy {
+                text-align: justify
+            }
+
+            #shareUrl,#stage #embedSnippet {
+                margin: 1em 0 2em 0;
+                display: block;
+                overflow-wrap: break-word;
+                word-wrap: break-word;
+                -ms-word-break: break-all;
+                word-break: break-all;
+                word-break: break-word;
+                -ms-hyphens: auto;
+                -moz-hyphens: auto;
+                -webkit-hyphens: auto;
+                hyphens: auto
+            }
+
+            code {
+                border: 2px solid #666;
+                padding: 1em;
+                background-color: #262626
+            }
+
+            #brace {
+                position: absolute;
+                top: 0;
+                left: 0;
+                display: none;
+                opacity: .5;
+                font-size: .9em;
+                line-height: 2
+            }
+
+            #brace.active {
+                display: block
+            }
+
+            @media screen and (max-width: 700px) {
+                #brace.active {
+                    display:none
+                }
+
+                #stage,nav {
+                    display: none
+                }
+
+                .left {
+                    float: initial;
+                    height: 75vh
+                }
+
+                .right {
+                    height: 25vh;
+                    display: flex;
+                    justify-content: center;
+                    background-color: #353535;
+                    padding: 0
+                }
+
+                main {
+                    display: flex;
+                    flex-direction: column-reverse
+                }
+
+                .input {
+                    height: 50%
+                }
+            }
+
+            .embed #stage,.embed nav {
+                display: none
+            }
+
+            .embed .left {
+                float: initial;
+                height: 75vh
+            }
+
+            .embed .right {
+                height: 25vh;
+                display: flex;
+                justify-content: center;
+                background-color: #353535;
+                padding: 0
+            }
+
+            .embed main {
+                display: flex;
+                flex-direction: column-reverse
+            }
+
+            .embed .input {
+                height: 50%
+            }
+
+            .embed #brace.active {
+                display: none
+            }
+        </style>
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="manifest" href="/site.webmanifest">
+        <script>
+            var App = {}
+              , path = {};
+        </script>
+    </head>
+    <body>
+        <main>
+            <section class="left" id="tree"></section>
+            <section class="right">
+                <section class="input">
+                    <div id="brace">
+                        Will be expanded into: <span id="expansionSet"></span>
+                        <span></span>
+                    </div>
+                    <input type="text" name="glob" id="glob" autofocus aria-label="glob pattern">
+                </section>
+                <section id="stage" class="examples">
+                    <article class="about">
+                        <h1>Glob tester - a tool for testing glob patterns</h1>
+                        <h3>What is glob?</h3>
+                        <p>
+                            <a href="https://en.wikipedia.org/wiki/Glob_(programming)">Glob</a>
+                            or shell globbing refers to the process of matching glob patterns to files in the filesystem. Best to illustrate it with an example: bash shell command <span class="code">cp *.jpg ./thumbnails</span>
+                            will copy all files that have .jpg extension to the thumbnails folder. In that context <span class="code">*.jpg</span>
+                            is the glob pattern and it will match all the files in the current working directory that have .jpg extension. Think of it as a pattern matching for the filesystem.
+                        </p>
+                        <h3>What is globster.xyz?</h3>
+                        <p>
+                            globster.xyz is a tool to test and visualise glob pattern matching. Type your glob pattern in the input field above and all matched files will be highlighted in <span class="blue">blue</span>
+                            in the tree directory structure. Use it to debug when your glob does not work or to experiment and learn from the provided examples. <a href="https://github.com/isaacs/minimatch">minimatch</a>
+                            (version 3.0.4) JavaScript library is used to evaluate glob patterns on this website.
+                        </p>
+                        <h3>Where is globbing used?</h3>
+                        <p>
+                            Globbing was first introduced in unix system. It is widely used in many tools these days. <a href="https://git-scm.com/docs/gitignore">Gitignore</a>
+                            file of the git version control system is one example. Patterns are used to exclude certain files and folders from being version controlled.
+                        </p>
+                        <h3>Syntax</h3>
+                        <p>
+                            Syntax depends on the particular implementation. Minimatch used by this website supports basic wildcards (<span class="code">?</span>
+                            <span class="code">*</span>
+                            ) as well as : brace expansion, extended glob matching and globstar. Go to <i>glob examples</i>
+                            section for minimatch examples and syntax details. Details are based on the <a href="https://github.com/isaacs/minimatch">minimatch documentation</a>
+                            and <a href="https://linux.die.net/man/1/sh">sh documentation</a>
+                            .
+                        </p>
+                        <h3>Glob implementations</h3>
+                        <p>There are many implementations in almost every programming language.</p>
+                        <p>
+                            Javascript: <a href="https://github.com/isaacs/minimatch">minimatch</a>
+                            , <a href="https://github.com/micromatch/micromatch">micromatch</a>
+                            , <a href="https://github.com/micromatch/extglob">extglob</a>
+                        </p>
+                        <p>
+                            Python: <a href="https://docs.python.org/3/library/glob.html">glob module</a>
+                        </p>
+                        <p>
+                            Linux: <a href="https://man7.org/linux/man-pages/man7/glob.7.html">glob</a>
+                        </p>
+                        <h3>About the author</h3>
+                        <p>
+                            I am on Twitter at <a href="https://twitter.com/cdomajno" target="_blank">@CDomajno</a>
+                            .
+                        </p>
+                    </article>
+                    <article class="examples">
+                        <div class="hints globstar">
+                            <span class="code infoBtn sc">?</span>
+                            <span class="code infoBtn star">*</span>
+                            <span class="code infoBtn slash">/</span>
+                            <span class="code infoBtn globstar">**</span>
+                            <span class="code infoBtn brace">{a,b}</span>
+                            <span class="code infoBtn extquestion">?(a|b)</span>
+                            <span class="code infoBtn extstar">*(a|b)</span>
+                            <span class="code infoBtn extplus">+(a|b)</span>
+                            <span class="code infoBtn extat">@(a|b)</span>
+                            <span class="code infoBtn extnegate">!(a|b)</span>
+                        </div>
+                        <dev id="extraInfo" class="globstar">
+                            <span class="sc">Matches single character. </span>
+                            <span class="star">Matches any string. </span>
+                            <span class="slash">Path separator. </span>
+                            <span class="globstar">
+                                Feature known as globstar. Matches all files and zero or more directories and subdirectories. If followed by a <span class="code">/</span>
+                                it matches only directories and subdirectories. To work that way it must be the only thing inside the path part e.g. <span class="code">/myapp/**.js</span>
+                                will not work that way. 
+                            </span>
+                            <span class="brace">
+                                Feature known as brace expansion. Expression inside curly braces is expanded into multiple patterns e.g. <span class="code">**/*.{b,c}</span>
+                                will be expanded into <span class="code">**/*.b</span>
+                                and <span class="code">**/*.c</span>
+                                . The final result is the union of checking both patterns. Also brace sets like <span class="code">**/{a..c}</span>
+                                will be expanded into <span class="code">**/a</span>
+                                <span class="code">**/b</span>
+                                <span class="code">**/c</span>
+                                . 
+                            </span>
+                            <span class="extquestion">Syntax of the extended glob matching feature (extglob). Matches zero or one occurrence of the given patterns. </span>
+                            <span class="extstar">Syntax of the extended glob matching feature (extglob). Matches zero or more occurrences of the given patterns. </span>
+                            <span class="extplus">Syntax of the extended glob matching feature (extglob). Matches one or more occurrences of the given patterns. </span>
+                            <span class="extat">Syntax of the extended glob matching feature (extglob). Matches one of the given patterns. </span>
+                            <span class="extnegate">Syntax of the extended glob matching feature (extglob). Matches anything except one of the given patterns.</span>
+                        </dev>
+                        <ul id="example_list">
+                            <li>
+                                <span class="code btn" tabindex="0">/myapp/config/*</span>
+                                <span>All files inside config directory</span>
+                            </li>
+                            <li>
+                                <span class="code btn" tabindex="0">**/*.png</span>
+                                <span>All .png files in all directories</span>
+                            </li>
+                            <li>
+                                <span class="code btn" tabindex="0">**/*.{png,ico,md}</span>
+                                <span>All .png, .ico or .md files in all directories</span>
+                            </li>
+                            <li>
+                                <span class="code btn" tabindex="0">/myapp/src/**/*.ts</span>
+                                <span>All .ts files inside src directory (and all its subdirectories)</span>
+                            </li>
+                            <li>
+                                <span class="code btn" tabindex="0">**/!(*.module).ts</span>
+                                <span>All .ts files but not .module.ts</span>
+                            </li>
+                        </ul>
+                    </article>
+                    <article class="disqus">
+                        <div id="disqus_thread"></div>
+                    </article>
+                    <article class="edit">
+                        <span>
+                            To change files structure edit paths below and then click <i>apply</i>
+                            button.
+                        </span>
+                        <textarea rows="8" cols="50" wrap="soft" id="editor" spellcheck="false"></textarea>
+                        <div>
+                            <span class="button" id="saveEdit" tabindex="0">apply</span>
+                        </div>
+                    </article>
+                    <article class="share">
+                        <span>URL below will take you to exactly the same workspace as you see right now.</span>
+                        <a href="/" id="shareUrl" target="_blank" rel="noopener"></a>
+                        <span>Use following snippet to embed this workspace in your website.</span>
+                        <code id="embedSnippet" class="blue"></code>
+                    </article>
+                </section>
+            </section>
+        </main>
+        <nav class="examples">
+            <div>
+                <h2>
+                    <a href="/privacy/" class="privacy" target="_blank" rel="noopener">privacy policy</a>
+                </h2>
+                <h2>
+                    <a href="" class="about">info</a>
+                </h2>
+                <h2>
+                    <a href="" class="examples">glob examples</a>
+                </h2>
+                <h2>
+                    <a href="" class="edit">edit files</a>
+                </h2>
+                <h2>
+                    <a href="" class="share">share</a>
+                </h2>
+            </div>
+            <h2>
+                <a class="kofi" href="https://ko-fi.com/globsterxyz" target="_blank">support this project</a>
+            </h2>
+        </nav>
+        <script src="main.js" defer="defer"></script>
+        <noscript>This website requires JavaScript to be enabled.</noscript>
+    </body>
+</html>
